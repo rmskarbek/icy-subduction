@@ -26,11 +26,9 @@ sigma_L = 1e-3*g*rho_ice*Depth;
 %%% planes. I.E. planes at an angle phi = atan(mu) measured from sigma_3 in the direction.
 %%% of sigma_1. So the orientation of the failures surfaces are determined by the
 %%% friction coefficient.
-% mu_0 = 0.55;                                                % eq (1a) in Dombard & McKinnon
-[Temp_P, mu_0] = IceFriction(TempK);
+mu_0 = 0.55;                                                % eq (1a) in Dombard & McKinnon
 phi = atan(mu_0);
-C = 0;
-% C = 1;                                                      % Cohesion [MPa]
+C = 1;                                                      % Cohesion [MPa]
 sigma_1 = (2*C + (cos(phi) + mu_0.*(sin(phi) + 1)).*sigma_L)...
     ./(cos(phi) + mu_0.*(sin(phi) - 1));
 Tau_F = sigma_1 - sigma_L;
