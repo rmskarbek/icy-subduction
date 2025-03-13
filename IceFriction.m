@@ -1,6 +1,10 @@
 function [Temp_P, mu_P] = IceFriction(TempK)
-%%% This function carries out calculations to predict the temperature
-%%% dependence of friction coeficient during steady sliding of ice on ice.
+%%% This function carries out calculations to predict the temperature dependence of
+%%% friction coeficient during steady sliding of ice on ice.
+
+%%% 9.6.2024 - Temp_P is close to, but not exactly the same as TempK. So that needs to be 
+%%% addressed. Also, the Persson friction values need to be tweaked a bit to better fit
+%%% the experimental data.
 
 %%% Schuslon calculation.
     % [Temp, mu_S] = SchulsonIce;
@@ -53,7 +57,12 @@ C = v*tau_m_0./alpha;
 fun = @(T)(T - (T_c + T_0) - C.*(1 - T./T_c).^beta);
 %%% Need to automatically set T_init lower bound.
 T_int = [-230 0] + T_c;
-x = fzero(fun, T_int) - T_c;
+% try
+    x = fzero(fun, T_int) - T_c;
+% catch
+%     pause
+% end
+
 
 %%% Compute shear stress on asperity;
 tau_m = alpha.*(x - T_0)./v;

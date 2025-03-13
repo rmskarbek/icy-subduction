@@ -1,9 +1,22 @@
-function Sigma_Diff = IceFlowLaws(TempK)
+function Sigma_Diff = IceFlowLaws(TempK, varargin)
+
+% varargin - Use to input strain rate as a function of temperature. Otherwise strain rate
+%            is set to 1e-15 [1/s]
 
 %%% 9.30.2024 - Add grain size as an input? Currently it is set on Line 39.
 
+%%% 10.22.2024 - ductile mechanisms act in parallel.
+
     R = 8.314;                                              % gas constant [J / (mol K)]
-    e = 1e-15;                                              % strain rate [1/s]
+
+%%% Set the strain rate if it is not input.
+    if isempty(varargin)
+        e = 1e-15;                                          % strain rate [1/s]
+    else
+        % e = varargin{1};                                    % strain rate [1/s]
+        e = abs(varargin{1});                                    % strain rate [1/s]
+    end
+    
     
 %%% Indices for high temperature behavior.
     T_tr = 259;                                             % low/high transition temp [K]
@@ -21,11 +34,11 @@ function Sigma_Diff = IceFlowLaws(TempK)
     Q_disl_highT = 180e3;                                   % [J / mol]
 
 %%% Differential stress for low temp dislocation creep [MPa].
-    sigma_disl_lowT = ((e/A_disl_lowT)*exp(Q_disl_lowT./(R*TempK))).^(1/n_disl);
+    sigma_disl_lowT = ((e/A_disl_lowT).*exp(Q_disl_lowT./(R*TempK))).^(1/n_disl);
 
 %%% Composit differential stress for dislocation creep. First compute the high temperature
 %%% stress, then replace appropriate elements with the low temperature stress.
-    sigma_disl = ((e/A_disl_highT)*exp(Q_disl_highT./(R*TempK))).^(1/n_disl);
+    sigma_disl = ((e/A_disl_highT).*exp(Q_disl_highT./(R*TempK))).^(1/n_disl);
     sigma_disl(i_low) = sigma_disl_lowT(i_low);
 
 %%% Conversion factor from Dombard & McKinnon (2001).
@@ -45,11 +58,11 @@ function Sigma_Diff = IceFlowLaws(TempK)
     Q_gbs_highT = 192e3;                                    % [J / mol]
 
 %%% Differential stress for low temp grain boundary sliding [MPa].
-    sigma_gbs_lowT = ((e*d^m_gbs/A_gbs_lowT)*exp(Q_gbs_lowT./(R*TempK))).^(1/n_gbs);
+    sigma_gbs_lowT = ((e*d^m_gbs/A_gbs_lowT).*exp(Q_gbs_lowT./(R*TempK))).^(1/n_gbs);
 
 %%% Composit differential stress for grain boundary sliding. First compute the high 
 %%% temperature stress, then replace appropriate elements with the low temperature stress.
-    sigma_gbs = ((e*d^m_gbs/A_gbs_highT)*exp(Q_gbs_highT./(R*TempK))).^(1/n_gbs);
+    sigma_gbs = ((e*d^m_gbs/A_gbs_highT).*exp(Q_gbs_highT./(R*TempK))).^(1/n_gbs);
     sigma_gbs(i_low) = sigma_gbs_lowT(i_low);
 
 %%% Conversion factor from Dombard & McKinnon (2001).
@@ -68,7 +81,7 @@ function Sigma_Diff = IceFlowLaws(TempK)
     Q_bs = 60e3;                                            % [J / mol]
 
 %%% Differential stress for basal slip-accommodated GBS [MPa].
-    sigma_bs = ((e/A_bs)*exp(Q_bs./(R*TempK))).^(1/n_bs);
+    sigma_bs = ((e/A_bs).*exp(Q_bs./(R*TempK))).^(1/n_bs);
 
 %%% Conversion factor from Dombard & McKinnon (2001).
     A_prime_bs = (3^(1/2)/2)^(n_bs + 1);
@@ -77,7 +90,8 @@ function Sigma_Diff = IceFlowLaws(TempK)
 %----------------------------------------------------------------------------------------%
 %----------------------------------------------------------------------------------------%
 %%% Combine the mechanisms.
-    Sigma_Diff = [sigma_disl, sigma_gbs, sigma_bs];
+    % Sigma_Diff = [sigma_disl, sigma_gbs, sigma_bs];
+    Sigma_Diff = sigma_disl + sigma_gbs + sigma_bs;
 
 
 %----------------------------------------------------------------------------------------%
