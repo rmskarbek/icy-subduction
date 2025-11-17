@@ -1,23 +1,31 @@
-function GeometryPlot(p)
+function GeometryPlot
 
-%%%------------------------------------------------------------------------------------%%%
-%%% This function plots the model geometry with the slab, ice shell and coordinate axes.
-%%% It also annotates the figure to the show the temperature boundary conditions.
+%%%-------------------------------------------------------------------------------%%%
+%%% This function plots the model geometry with the slab, ice shell and coordinate 
+%%% axes. It also annotates the figure to the show the temperature boundary 
+%%% conditions.
 
-%%% NOTE: This code is optimized for H = 5 km and H_shell = 25 km, but should still work
-%%% for other thicknesses.
-%%%------------------------------------------------------------------------------------%%%
+%%% NOTE: This code is optimized for H = 5 km and H_shell = 25 km, but should still 
+%%% work for other thicknesses.
+%%%-------------------------------------------------------------------------------%%%
 
 %%% Get the geometry of the slab.
-type = 'geometry';
-H = p.Geometry.SlabThick;
-H_shell = p.Geometry.ShellThick;
-R_min = p.Geometry.CurveRadius;
+% p = IcySubduction_Parameters;
+% H = p.Geometry.SlabThick;
+% H_shell = p.Geometry.ShellThick;
+% R_min = p.Geometry.CurveRadius;
+
+H = 5e3;
+H_shell = 25e3;
+R_min = 2*H;
+
 GeoFlag = 'Buffett';                % a flag that determines the slab geometry.
 
 switch GeoFlag
     case 'Buffett'
-        [w_top, w_center, w_bottom, theta, ~, ~, ~] = Buffett2006(type, H, H_shell, R_min);
+        type = 'geometry';
+        [w_top, w_center, w_bottom, theta, ~, ~, ~] = Buffett2006(type, H, H_shell,...
+            R_min);
 
     case 'CircularArc'
         3;
@@ -32,7 +40,7 @@ H_shell = 1e-3*H_shell;
 font = 'Palatino Linotype';
 fig = figure('DefaultTextFontName',font,'DefaultAxesFontName',font,...
     'DefaultAxesFontSize', 16);
-set(gcf,'Color','w')
+% set(gcf,'Color','w')
 
 xf = ceil(max(H_shell, max(real(Slab(:,3)))));
 x1 = -10;
@@ -43,39 +51,41 @@ x2 = xf;
 area([x1 x2], H_shell*[1 1], FaceColor = "#0072BD");
 hold on
 
-%%% Plot the conductive later.
+%%% Plot the conductive layer.
 area([x1 x2], H*[1 1], FaceColor = 'b');
 
 %%% Plot the slab.
 fill(real([x1; Slab(:,3); flip(Slab(:,1)); x1]), imag([0; Slab(:,3); flip(Slab(:,1));...
     1i*H]), 'b')
 
-%%%------------------------------------------------------------------------------------%%%
+%%%-------------------------------------------------------------------------------%%%
 %%% Plot cartesian coordinate axes.
 Arrow_X = annotation('arrow') ;
 Arrow_X.Parent = gca;
 Arrow_X.Position = [0, 0, 10, 0];
 Arrow_X.LineWidth = 2;
+Arrow_X.Color = 'r';
 
 Arrow_Y = annotation('arrow') ;
 Arrow_Y.Parent = gca;
 Arrow_Y.Position = [0, 0, 0, 10];
 Arrow_Y.LineWidth = 2;
 Arrow_Y.HeadLength = -10;
+Arrow_Y.Color = 'r';
 
-text(10, -0.5, '$x$', 'FontSize', 20, 'Interpreter', 'latex')
-text(0.5, 10, '$y$', 'FontSize', 20, 'Interpreter', 'latex')
+text(10, -0.5, '$x$', 'FontSize', 20, 'Interpreter', 'latex', 'Color', 'r')
+text(0.5, 10, '$y$', 'FontSize', 20, 'Interpreter', 'latex', 'Color', 'r')
 
-%%%------------------------------------------------------------------------------------%%%
+%%%-------------------------------------------------------------------------------%%%
 %%% Plot the center line and the trench location.
-plot(real(Slab(:,2)), imag(Slab(:,2)), 'k--', LineWidth = 2)
-plot(real([Slab(1,1) Slab(1,3)]), imag([Slab(1,1) Slab(1,3)]), 'k', LineWidth = 2)
-plot(real([Slab(end,1) Slab(end,3)]), imag([Slab(end,1) Slab(end,3)]), 'k', LineWidth = 2)
+plot(real(Slab(:,2)), imag(Slab(:,2)), 'w--', LineWidth = 1)
+% plot(real([Slab(1,1) Slab(1,3)]), imag([Slab(1,1) Slab(1,3)]), 'w', LineWidth = 2)
+% plot(real([Slab(end,1) Slab(end,3)]), imag([Slab(end,1) Slab(end,3)]), 'w', LineWidth = 2)
 
 %%% Plot the plate interface.
 [~, i_int] = min(abs(imag(Slab(:,3)) - H));
 i_int = i_int + 1;
-plot(real(Slab(1:i_int,3)), imag(Slab(1:i_int,3)), 'r--', LineWidth = 2)
+plot(real(Slab(1:i_int,3)), imag(Slab(1:i_int,3)), 'c--', LineWidth = 2)
 
 % %%% Plot some locations of the column.
 % plot(real(Slab(1, [1 3])), imag(Slab(1, [1 3])), 'k', LineWidth=3)
@@ -85,7 +95,7 @@ ic2 = round(0.3*numel(theta));
 % plot(real(Slab(ic3, [1 3])), imag(Slab(ic3, [1 3])), 'k', LineWidth=3)
 %
 
-%%%------------------------------------------------------------------------------------%%%
+%%%-------------------------------------------------------------------------------%%%
 %%% Tangent angle (psi) along the center line.
 psi = pi/2 - theta;
 %%% Slope of normal lines.
@@ -103,18 +113,20 @@ dp_z = p2 - p1;
 %%% Create the arrow
 Arrow_Z = annotation('arrow', 'position', [p1(1), p1(2)+2*dp_z(2), dp_z(1), -dp_z(2)],...
     'linestyle','none');
+Arrow_Z.Color = 'w';
 set(Arrow_Z,'parent', gca);
 
 %%% Create the line.
 Line_Z = annotation('arrow', 'position', [p1(1), p1(2), dp_z(1), dp_z(2)]);
 Line_Z.HeadStyle = 'none';
 Line_Z.LineWidth = 2;
+Line_Z.Color = 'w';
 set(Line_Z,'parent', gca);
 
 %%% Axis label.
-text(p2(1)+0.5, p2(2), '$z$', 'FontSize', 20, 'Interpreter', 'latex')
+text(p2(1)+0.5, p2(2), '$z$', 'FontSize', 20, 'Interpreter', 'latex', 'Color', 'w')
 
-%%%------------------------------------------------------------------------------------%%%
+%%%-------------------------------------------------------------------------------%%%
 %%% Plot an example of the s-axis. Slope and y-intercept of tanget line.
 m = tan(theta(ic2));
 y_int = imag(Slab(ic2,2)) - m.*real(Slab(ic2,2));
@@ -126,18 +138,20 @@ dp_s = p3 - p1;
 %%% Create the arrow
 Arrow_S = annotation('arrow', 'position', [p1(1), p1(2)+2*dp_s(2), dp_s(1), -dp_s(2)],...
     'linestyle','none');
+Arrow_S.Color = 'w';
 set(Arrow_S,'parent', gca);
 
 %%% Create the line.
 Line_S = annotation('arrow', 'position', [p1(1), p1(2), dp_s(1), dp_s(2)]);
 Line_S.HeadStyle = 'none';
 Line_S.LineWidth = 2;
+Line_S.Color = 'w';
 set(Line_S,'parent', gca);
 
 %%% Axis label.
-text(p3(1), p3(2)-0.5, '$s$', 'FontSize', 20, 'Interpreter', 'latex')
+text(p3(1), p3(2)-0.5, '$s$', 'FontSize', 20, 'Interpreter', 'latex', 'Color', 'w')
 
-%%%------------------------------------------------------------------------------------%%%
+%%%-------------------------------------------------------------------------------%%%
 %%% Add annotations for slab and shell thicknesses.
 Arrow_Slab = annotation('doublearrow');
 Arrow_Slab.Parent = gca;
@@ -145,7 +159,8 @@ Arrow_Slab.Position = [-5 0 0 H];
 Arrow_Slab.LineWidth = 2;
 Arrow_Slab.Head1Length = -10;
 Arrow_Slab.Head2Length = -10;
-text(-4.5, H/2, '$H$', 'FontSize', 20, 'Interpreter', 'latex')
+Arrow_Slab.Color = 'w';
+text(-4.5, H/2, '$H$', 'FontSize', 20, 'Interpreter', 'latex', 'Color', 'w')
 
 Arrow_Shell = annotation('doublearrow');
 Arrow_Shell.Parent = gca;
@@ -153,22 +168,23 @@ Arrow_Shell.Position = [-7.5 0 0 H_shell];
 Arrow_Shell.LineWidth = 2;
 Arrow_Shell.Head1Length = -10;
 Arrow_Shell.Head2Length = -10;
-text(-7, H_shell/2, '$H_{shell}$', 'FontSize', 20, 'Interpreter', 'latex')
+Arrow_Shell.Color = 'w';
+text(-7, H_shell/2, '$H_{shell}$', 'FontSize', 20, 'Interpreter', 'latex', 'Color', 'w')
 
-%%%------------------------------------------------------------------------------------%%%
+%%%-------------------------------------------------------------------------------%%%
 %%% Add annotiotions for the temperature conditions.
 text(0.8*x2, H+1, '$T = T_b$', 'FontSize', 20, 'Interpreter', 'latex')
 text(0.8*x2, -0.75, '$T = T_s$', 'FontSize', 20, 'Interpreter', 'latex')
 chr = ['$T = T_b$' newline 'warm, convecting ice'];
 text(0*x1, 0.7*H_shell, chr, 'FontSize', 18, 'Interpreter', 'latex')
 
-%%%------------------------------------------------------------------------------------%%%
+%%%-------------------------------------------------------------------------------%%%
 %%% Limits and such.
 axis equal
 ax = gca;
 % XX = ax.XLim;
-% ax.XLim = [-1 12];
-% ax.YLim = [0 22];
+ax.XLim = [x1 x2];
+ax.YLim = [-2 H_shell];
 ax.YDir = "reverse";
 hold off
 ax.YTickLabel = '';
@@ -180,9 +196,9 @@ ylabel('Depth, $y$-axis', 'Interpreter', 'latex')
 axesH = findall(fig, "Type", "axes");
 set(axesH, "TickLabelInterpreter", 'latex')
 
-%%%------------------------------------------------------------------------------------%%%
+%%%-------------------------------------------------------------------------------%%%
 %%% Previous code
-%%%------------------------------------------------------------------------------------%%%
+%%%-------------------------------------------------------------------------------%%%
 %%% Plot the slab boundaries.
 % plot([x1; real(Slab(:,1))], imag([Slab(1,1); Slab(:,1)]), 'k', LineWidth = 3)
 % hold on

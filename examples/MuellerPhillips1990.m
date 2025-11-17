@@ -1,7 +1,7 @@
 function MuellerPhillips1990
 %%% This function reproduces Figures 2 and 3 in Mueller & Phillips (1990), On the
 %%% Initiation of Subduction. The calculation consists of computing the force required to
-%%% initiate motion on an incipient fault plane with a given dip angle. This serves as an
+%%% initiate motion on an existing fault plane with a given dip angle. This serves as an
 %%% estimate of the minimum force necessary to promote trench formation, because other
 %%% resisting forces (e.g. plate bending) are ignored.
 

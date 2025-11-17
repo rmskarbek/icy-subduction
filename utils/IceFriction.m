@@ -2,9 +2,9 @@ function [Temp_P, mu_P] = IceFriction(TempK)
 %%% This function carries out calculations to predict the temperature dependence of
 %%% friction coeficient during steady sliding of ice on ice.
 
-%%% 9.6.2024 - Temp_P is close to, but not exactly the same as TempK. So that needs to be 
-%%% addressed. Also, the Persson friction values need to be tweaked a bit to better fit
-%%% the experimental data.
+%%% 9.6.2024 - Temp_P is close to, but not exactly the same as TempK. So that needs 
+%%% to be addressed. Also, the Persson friction values need to be tweaked a bit to 
+%%% better fit the experimental data.
 
 %%% Schuslon calculation.
     % [Temp, mu_S] = SchulsonIce;
