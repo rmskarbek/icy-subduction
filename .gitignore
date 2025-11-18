@@ -18,8 +18,9 @@ helpsearch*/
 slprj/
 sccprj/
 
-# Matlab code generation folders
+# Matlab code generation folders and .mat files
 codegen/
+*.mat
 
 # Simulink autosave extension
 *.autosave
