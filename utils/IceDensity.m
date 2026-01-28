@@ -31,11 +31,16 @@ switch method
         T_transition = -140;
         i_rho = TempC < T_transition;
         
-        rho_ice = 917*(1 - 1.17e-4*TempC);                  % [kg/m^3] eq. (4) in Fukusako
-        rho_ice(i_rho) = 930*(1 - 1.54e-5*TempC(i_rho));    % [kg/m^3] eq. (5) in Fukusako
+%%% Eq. (4) in Fukusako
+        rho_ice = 917*(1 - 1.17e-4*TempC);                  % [kg/m^3]
+
+%%% Eq. (5) in Fukusako
+        rho_ice(i_rho) = 930*(1 - 1.54e-5*TempC(i_rho));    % [kg/m^3]
 
     case 'thermal'
         % alpha = 1e-6*(0.67*TempK - 24.86);                  % [1/K] eq. (6) in Fukusako
-        alpha = (1.56e-4/250)*TempK;                        % via Hobbs?
-        rho_ice = 917*(1 + alpha.*(Tc - TempK));            % Line 222 from Howell2019
+
+%%% Coefficient of thermal expansopn via Hobbs? See Johnson2017, bottom p. 2770
+        alpha = (1.56e-4/250)*TempK;                        % [1/K]
+        rho_ice = 917*(1 + alpha.*(Tc - TempK));
 end
