@@ -8,6 +8,11 @@ function p = IcySubduction_Parameters
 %%% conditions for IcySubduction.m
 
 %%%-------------------------------------------------------------------------------%%%
+%%% Notes.
+%%%-------------------------------------------------------------------------------%%%
+%%% 1. Add a switch for computing run times if using circular arc geometry.
+
+%%%-------------------------------------------------------------------------------%%%
 %%% Constants.
 %%%-------------------------------------------------------------------------------%%%
 spy = 365.25*24*3600;               % seconds per year
@@ -18,7 +23,6 @@ R = 8.314;                          % gas constant [J/(mol K)]
 %%%-------------------------------------------------------------------------------%%%
 %%% Geometry
 %%%-------------------------------------------------------------------------------%%%
-% H = 2.5e3;                          % thickness of conductive slab [m]
 H = 5e3;                            % thickness of conductive slab [m]
 H_shell = 10e3;                     % total thickness of ice shell [m]
 GeoFlag = 'Buffett';                % a flag that determines the slab geometry.
@@ -67,11 +71,11 @@ phi_0 = 0.1;                        % porosity reference
 %%% layer.
 rho_salt = 1444;                    % natron density [kg/m^3]
 
-% f_slab = 0;                         % salt content in slab
+f_slab = 0;                         % salt content in slab
 f_conduct = 0;                      % salt content in convective layer
 f_convect = 0;                      % salt content in non-subducting conductive layer
 
-f_slab = 0.1;                         % salt content in slab
+% f_slab = 0.1;                         % salt content in slab
 % f_conduct = 0.01;                   % salt content in convective layer
 % f_convect = 0.15;                   % salt content in non-subducting conductive layer
 
@@ -89,7 +93,6 @@ p = struct('Constants', [], 'Numerical', [], 'Geometry', [], 'Temperature', [],.
 
 p.Constants.Gravity = g;
 p.Constants.GasConst = R;
-% p.Constants.IceDensity = rho_ice0;
 
 p.Geometry.SlabThick = H;
 p.Geometry.ShellThick = H_shell;
