@@ -27,7 +27,7 @@ function Vars_init = IcySubduction_InitialConditions(p)
 %%% Viscosity
 %%%-------------------------------------------------------------------------------%%%
     Q = p.Viscosity.ActivEnergy;            % viscosity activation energy [J/mol]
-    eta_b = p.Viscosity.BasalVisc;          % reference viscosity at base of ice shell [Pa*s]
+    eta_b = p.Viscosity.BasalVisc;          % viscosity in convecting ice T = T_b [Pa*s]
     eta_max = p.Viscosity.MaxVisc;          % maximum viscosity from Howell2019 [Pa*s]
 
 %%%-------------------------------------------------------------------------------%%%
@@ -54,7 +54,7 @@ function Vars_init = IcySubduction_InitialConditions(p)
 
 %%% Initial lithostatic stress [Pa].
     rho_ice = IceDensity(T_init, method);
-    rho = ((1 - f_slab)*rho_ice + f_slab*rho_salt);
+    rho = (1 - f_slab)*rho_ice + f_slab*rho_salt;
     sigma_lith = g*rho.*Depth_init;    
 
 %%% Iterate through the porosity calculation until the lithostatic stress stops 
@@ -68,7 +68,6 @@ function Vars_init = IcySubduction_InitialConditions(p)
 
 %%% Initial porosity profile in the subducting slab. Eq. (4) in Johnson2017
         phi_init = phi_0*exp(-t_por*sigma_lith./eta_init);
-        % rho = rho_ice.*(1 - phi_init);
         rho = ((1 - f_slab)*rho_ice + f_slab*rho_salt).*(1 - phi_init);
         sigma_lith = cumtrapz(Depth_init, g*rho);
 
