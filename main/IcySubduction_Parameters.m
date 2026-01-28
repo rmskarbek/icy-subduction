@@ -12,6 +12,9 @@ function p = IcySubduction_Parameters
 %%%-------------------------------------------------------------------------------%%%
 %%% 1. Add a switch for computing run times if using circular arc geometry.
 
+%%% 2. Add some instructions and explanation for the different options: GeoFlag;
+%%% coeff; method.
+
 %%%-------------------------------------------------------------------------------%%%
 %%% Constants.
 %%%-------------------------------------------------------------------------------%%%

@@ -1,40 +1,8 @@
 function Out = IcySubduction(p)
 
-%%%-------------------------------------------------------------------------------%%%
-%%%-------------------------------------------------------------------------------%%%
-%%% Notes.
-
-%%% 1. Vertical stress uses sigma_zz for stresses referenced to the top of slab.
-
-%%% 4. In BendingForce.m, if the slab is straight then the strain rates are all zero. 
-%%%    This seems to be causing the code to compute zero stress for all cases: 
-%%%    compression, tension, ductile. I think this is OK, but check.
-
-%%% 6. Update GeometryPlot.m for circular arc condition.
-
-%%% 7. Need to settle on a subsumption temperature. Contours for 259.99 are a little
-%%%    rough, so increase the ODE tolerance.
-
-%%%-------------------------------------------------------------------------------%%%
 %%% This code solves the dimensional equations for temperature and porosity evolution 
 %%% in a subducting 1-D column of ice. The code is essentially the same model used by
-%%% Johnson et al. (2017) and Howell & Papallardo (2019), although there are some
-%%% important differences:
-
-%%% 1. The code includes an option to use either the slab geometry defined by Buffett
-%%%    (2006), or the circular arc slab geometry used by both J2017 and H2019.
-
-%%% 2. This code can employ either a linear or harmonic mean in the finite difference 
-%%%    formula for dealing with non-constant coefficients in the diffusive term of 
-%%%    the temperature equation. Both J2017 and H2019 use a harmonic mean.
-
-%%% 3. A big difference in using a failure envelope to compute the bending force is 
-%%%    that it does not depend on the plate convergence rate. Whereas in the method 
-%%%    used by H2019 the bending force depends linearly on v_plate. So in our model, 
-%%%    faster subduction rates can get colder, denser slab material to greater depths 
-%%%    (and so increase slab pull) without increasing the bending force. This leads 
-%%%    to "easier" subduction.
-
+%%% Johnson et al. (2017) and Howell & Papallardo (2019).
 
 %%%-------------------------------------------------------------------------------%%%
 %%% INPUT
@@ -59,7 +27,7 @@ function Out = IcySubduction(p)
 
 % TimeYrs        - [years] The time at each step that the solver routine used.
 
-% VerticalStress - [kg/m^3] Vertical stress (i.e. overburden stress) in the column at
+% VerticalStress - [Pa] Vertical stress (i.e. overburden stress) in the column at
 %                  each time step.
 
 % Viscosity      - [Pa*s] Viscosity in the column at each time step.
@@ -122,7 +90,7 @@ T_s = p.Temperature.SurfaceTemp;        % surface temp [K], after Nimmo et al. (
 %%% Viscosity
 %%%-------------------------------------------------------------------------------%%%
 Q = p.Viscosity.ActivEnergy;            % viscosity activation energy [J/mol]
-eta_b = p.Viscosity.BasalVisc;          % reference viscosity at base of ice shell [Pa*s]
+eta_b = p.Viscosity.BasalVisc;          % viscosity in convecting ice T = T_b [Pa*s]
 eta_max = p.Viscosity.MaxVisc;          % maximum viscosity from Howell2019 [Pa*s]
 
 %%%-------------------------------------------------------------------------------%%%
@@ -266,7 +234,7 @@ function dVarsdt = PDE(time, Vars, ~)
     end
     depth = linspace(imag(z_top), imag(z_bottom), N)';
 
-%%% Compute ice density and bulk density in the lab for current temperature profile.
+%%% Compute ice density and bulk density in the slab for current temperature profile.
     rho_ice = IceDensity(T, method);
     rho = ((1 - f_slab)*rho_ice + f_slab*rho_salt).*(1 - phi);
 
