@@ -1,4 +1,5 @@
 function p = IcySubduction_Parameters
+
 %%% This function generates a structure of parameter values and constants that are 
 %%% used in IcySubduction.m. Having a separate code for defining the parameters helps
 %%% in maintaining records of simulation data, and in running large batches of 
@@ -27,11 +28,11 @@ R = 8.314;                          % gas constant [J/(mol K)]
 %%% Geometry
 %%%-------------------------------------------------------------------------------%%%
 H = 5e3;                            % thickness of conductive slab [m]
-H_shell = 10e3;                     % total thickness of ice shell [m]
+H_shell = 25e3;                     % total thickness of ice shell [m]
 GeoFlag = 'Buffett';                % a flag that determines the slab geometry.
 % GeoFlag = 'Johnson';                % a flag that determines the slab geometry.
 R_min = 2*H;                        % minimum radius of plate curvature [m]
-v_plate = 0.004;                     % plate convergence rate [m/year]
+v_plate = 0.04;                     % plate convergence rate [m/year]
 
 %%%-------------------------------------------------------------------------------%%%
 %%% Numerical
@@ -68,20 +69,15 @@ eta_max = 1e23;                     % maximum viscosity from Howell2019 [Pa*s]
 %%%-------------------------------------------------------------------------------%%%
 t_por = 65e6;                       % initial porosity compaction time [years]
 phi_0 = 0.1;                        % porosity reference
-% phi_0 = 0;                          % porosity reference
 
 %%% Salt content in the slab, non-subducting conductive layer, and the convective 
-%%% layer.
-rho_salt = 1444;                    % natron density [kg/m^3]
-
+%%% layer. All values are wt%.
 f_slab = 0;                         % salt content in slab
 f_conduct = 0;                      % salt content in convective layer
 f_convect = 0;                      % salt content in non-subducting conductive layer
 
-% f_slab = 0.1;                         % salt content in slab
-% f_conduct = 0.01;                   % salt content in convective layer
-% f_convect = 0.15;                   % salt content in non-subducting conductive layer
-
+%%% Salt density.
+rho_salt = 1444;                    % natron density [kg/m^3]
 
 %%% Method for computing ice density; see IceDensity.m
 % method = 'constant';                % use a constant value, defined in IceDensity.m
@@ -102,6 +98,7 @@ p.Geometry.ShellThick = H_shell;
 p.Geometry.CurveRadius = R_min;
 p.Geometry.GeoFlag = GeoFlag;
 p.Geometry.PlateRate = v_plate/spy;     % convert to [m/s]
+p.Geometry.ArcLength = s_end;
 
 p.Numerical.GridPoints = N;
 p.Numerical.GridSpacing = dz;

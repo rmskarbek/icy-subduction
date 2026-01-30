@@ -11,18 +11,11 @@ function [w_top, w_center, w_bottom, theta, K, dKds, s_end] = Buffett2006(type, 
 %%% the slab's mid-surface at z = 0. Buffett refers to the mid-surface as the 
 %%% centerline.
 
-%%%-------------------------------------------------------------------------------%%%
 %%% Buffett, B. A. (2006), Plate force due to bending at subduction zones, 
 %%% J. Geophys. Res., 111, B09405, doi:10.1029/2006JB004295.
 
 %%% Buffett, B. A., and T. W. Becker (2012), Bending stress and dissipation in 
 %%% subducted lithosphere, J. Geophys. Res., 117, B05413, doi:10.1029/2012JB009205.
-
-
-%%%-------------------------------------------------------------------------------%%%
-%%% Notes.
-%%%-------------------------------------------------------------------------------%%%
-%%% 1. Output s_end as varargout.
 
 %%%-------------------------------------------------------------------------------%%%
 
@@ -75,17 +68,6 @@ function [w_top, w_center, w_bottom, theta, K, dKds] = SlabGeometry(s, H, R_min)
     i_r2 = s > R_min & s <= 2*R_min;
     i_r3 = s > 2*R_min;
 
-%%% Change in curvature from equation (16). As described by Buffett, dKds is negative
-%%% for s > R_min, where the plate unbends.
-    % C = 1/R_min^2;                                       % [1 / km^2]
-    % dKds = nan(size(s));
-    % dKds(i_r1) = C;
-    % dKds(i_r2) = -C;
-    % dKds(i_r3) = 0;
-    % K = cumtrapz(s, dKds);
-    % K = 0;
-    % dKds = 0;  
-
 %%% Geometry for s < R_min.
     dKds(i_r1) = 1/R_min^2;
     K(i_r1) = s(i_r1)/R_min^2;
@@ -98,8 +80,7 @@ function [w_top, w_center, w_bottom, theta, K, dKds] = SlabGeometry(s, H, R_min)
     b = 2/R_min;
     dKds(i_r2) = -1/R_min^2;
     K(i_r2) = b - 2*a*s(i_r2);
-
-    % theta(i_r2) = (2*s(i_r2)/R_min - s(i_r2).^2/(2*R_min^2)) - 1;
+    
     theta(i_r2) = b*s(i_r2) - a*s(i_r2).^2 - 1;
     
     w_center(i_r2) = -(-1)^(3/4)*sqrt(pi/2)*R_min*erfi((-1)^(1/4)/sqrt(2))...
@@ -141,21 +122,6 @@ function [w_top, w_center, w_bottom, theta, K, dKds] = SlabGeometry(s, H, R_min)
     
     w_top = x_top + 1i*y_top;
     w_bottom = x_bottom + 1i*y_bottom;
-
-%%% Slope of normal line.
-    % m = -tan(psi);
-
-%%% y-intercept of normal line.
-    % b = y_center - m.*x_center;
-    % A = (1 + m.^2);
-    % B = 2*(m.*(b - y_center) - x_center);
-    % C = x_center.^2 + (b - y_center).^2 - (H/2)^2;
-    % 
-    % x_top = (1./(2*A)).*(-B + sqrt(B.^2 - 4*A.*C));
-    % x_bottom = (1./(2*A)).*(-B - sqrt(B.^2 - 4*A.*C));
-    % 
-    % y_top = m.*x_top + b;
-    % y_bottom = m.*x_bottom + b;
-end
+end   
 
 end

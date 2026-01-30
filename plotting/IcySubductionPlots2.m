@@ -1,7 +1,7 @@
 function IcySubductionPlots2(Out)
 
 %%% Get the geometry of the slab.
-p = IcySubduction_Parameters;
+p = Out.p;
 H = p.Geometry.SlabThick;
 H_shell = p.Geometry.ShellThick;
 
@@ -30,7 +30,7 @@ cmap_T = crameri('lajolla');
 
 %%% Plot the convective layer.
 x1 = 0;
-x2 = max(max(x_Slab));
+x2 = ceil(max(max(x_Slab)));
 
 area([x1 x2], H_shell*[1 1], FaceColor = cmap_T(end,:));
 hold on
