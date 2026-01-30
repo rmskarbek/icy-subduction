@@ -74,6 +74,7 @@ H_shell = p.Geometry.ShellThick;        % total thickness of ice shell [m]
 GeoFlag = p.Geometry.GeoFlag;           % a flag that determines the slab geometry.
 R_min = p.Geometry.CurveRadius;         % minimum radius of plate curvature [m]
 v_plate = p.Geometry.PlateRate;         % plate convergence rate [m/s]
+% s_end = p.Geometry.ArcLength;           % total arc length of center line [m]
 type = 'location';                      % flag for Buffett2006.m
 
 if strcmp(p.Geometry.GeoFlag, 'CircularArc')
@@ -172,8 +173,9 @@ switch GeoFlag
             DipAngle, ArcLength);
 end
 
-%%% Get the depth of the slab column at each output time and compute the lithostatic
-%%% stress (i.e. sigma_yy).
+%%% Get the distance and depth of the slab column at each output time and compute the 
+%%% lithostatic stress (i.e. sigma_yy).
+Distance = nan(N, numel(Time));
 Depth = nan(N, numel(Time));
 Sigma_yy = nan(N, numel(Time));
 
@@ -181,6 +183,7 @@ Sigma_yy = nan(N, numel(Time));
     S_column = cumtrapz(Depth_C, g*Rho);
 
 for i = 1:numel(Time)
+    Distance(:, i) = linspace(real(Z_Top(i,1)), real(Z_Bottom(i,1)), N)';
     Depth(:, i) = linspace(imag(Z_Top(i,1)), imag(Z_Bottom(i,1)), N)';
 
 %%% Total lithostatic stress in the column.
@@ -207,6 +210,7 @@ Eta(Eta > eta_max) = eta_max;
 Out = struct('TimeYrs', Time, 'Temperature', Temp, 'Porosity', Phi, 'Density', Rho,...
     'VerticalStress', Sigma_yy, 'Viscosity', Eta, 'Slab', [], 'p', p);
 Out.Slab.ArcLength = ArcLength;
+Out.Slab.Distance = Distance;
 Out.Slab.Depth = Depth;
 Out.Slab.CenterLine = Z_Center;
 Out.Slab.Top = Z_Top;
@@ -223,35 +227,74 @@ function dVarsdt = PDE(time, Vars, ~)
     T = Vars(1:N,:);
     phi = Vars(N+1:2*N,:);
 
-%%% Get the current burial depth of the numerical grid points.
+%%% Get the current distance and burial depth of the numerical grid points.
     s = v_plate*time;
     switch GeoFlag
         case 'Buffett'
-            [z_top, ~, z_bottom] = Buffett2006(type, H, H_shell, R_min, s);
+            [z_top, ~, z_bottom, theta] = Buffett2006(type, H, H_shell, R_min, s);
 
         case 'CircularArc'
             [z_top, ~, z_bottom] = CircularArc(type, H, H_shell, R_min, DipAngle, s);
     end
+    % distance = linspace(real(z_top), real(z_bottom), N)';
     depth = linspace(imag(z_top), imag(z_bottom), N)';
 
-%%% Compute ice density and bulk density in the slab for current temperature profile.
+%%% Compute ice density and bulk density in the slab for current
+%%% temperature and porosity.
     rho_ice = IceDensity(T, method);
     rho = ((1 - f_slab)*rho_ice + f_slab*rho_salt).*(1 - phi);
 
-%%% Lithostatic stress referenced to the top of the subducting column.
-    s_column = cumtrapz(Depth_C, g*rho);
+%%%-------------------------------------------------------------------------------%%%
+%%% Lithostatic (vertical) stress in the column.
+
+%%% Compute the height of slab material directly above each location in the column.
+%%% Buffett2006_Top.m will do this calculation exactly, but slows down the code a
+%%% lot, ~200 times longer to excute.
+    % y_top = Buffett2006_Top(s_end, H, H_shell, R_min, distance);
+    % height_slab = depth - y_top;
+%%% Instead, the height of the slab material can be approximated using the local slab
+%%% dip angle. This does not slow down the code at all.
+    height_slab = Depth_C./cos(theta);
+    y_top = depth - height_slab;
+
+%%% Lithoststic stress due to the height of slab above each location in the column.
+%%% Here we have to make an assumption about the density of the overlaying slab 
+%%% material. The most accurate thing would be to use the output of previous
+%%% timesteps to interpolate the slab density along vertical profiles above each
+%%% column location. This would be difficult and would certainly slow the code down
+%%% by orders of mangitude. Instead, we just assume that the density of overlying
+%%% material is the same as the column material.
+    s_column = cumtrapz(height_slab, g*rho);
 
 %%% Total lithostatic stress in the column.
     if depth(1,1) <= H
         s_lith = s_column + interp1(Depth_C, stress_cond, depth(1,1));
     else
 
-%%% Vertical stress due to thickness of convecting ice above the top of the column.   
-        s_conv = g*rho_ice_conv.*(depth(1,1) - H);
+%%% Vertical stress due to height of convecting ice above each location in the column.
+        height_conv = y_top - H;
+        s_conv = g*rho_ice_conv.*height_conv;
 
 %%% Total lithostatic stress.
         s_lith = s_column + stress_cond(end) + s_conv;
     end
+
+%%%-------------------------------------------------------------------------------%%%
+%%% Lithostatic stress referenced to the top of the subducting column.
+%     s_column = cumtrapz(Depth_C, g*rho);
+% 
+% %%% Total lithostatic stress in the column.
+%     if depth(1,1) <= H
+%         s_lith = s_column + interp1(Depth_C, stress_cond, depth(1,1));
+%     else
+% 
+% %%% Vertical stress due to height of convecting ice above the top of the column.   
+%         s_conv = g*rho_ice_conv.*(depth(1,1) - H);
+% 
+% %%% Total lithostatic stress.
+%         s_lith = s_column + stress_cond(end) + s_conv;
+%     end
+%%%-------------------------------------------------------------------------------%%%
 
 %%% Ice viscosity after Nimmo et al. (2003).
     eta = eta_b*exp((Q/R)*(1./T - 1/T_b));
