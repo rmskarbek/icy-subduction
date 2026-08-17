@@ -3,6 +3,12 @@ function Bend = BendingForce(Out)
 %%% This function computes the slab bending force using three different methods.
 
 %%%-------------------------------------------------------------------------------%%%
+%%% Input.
+%%%-------------------------------------------------------------------------------%%%
+% Out           - A structure of simulation output generated from IcySubduction.m.
+
+
+%%%-------------------------------------------------------------------------------%%%
 %%% OUTPUT. All of these variables are stored in a structure called 'Bend'.
 %%%-------------------------------------------------------------------------------%%%
 % dedt_ss       - Kinematically determined strain rate in the s-direction. 
@@ -16,7 +22,7 @@ function Bend = BendingForce(Out)
 % M_Visc        - Bending moment, assuming that the slab is a viscous fluid with 
 %                 variable viscosity.
 
-% M_Fail        - Bending momemt when the viscous stresses are limited by the failure
+% M_Fail        - Bending moment when the viscous stresses are limited by the failure
 %                 envelope.
 
 % F_Visc        - Bending force, assuming that the slab is a viscous fluid with 
@@ -90,13 +96,13 @@ mu_flag = 'temperature';
 Sigma_ss_Fail = nan(N, numel(Time));
 S_C = nan(N, numel(Time));
 S_T = nan(N, numel(Time));
+% Rheology = nan(N, numel(Time));
 
 %%% Compute the failure envelope for each slab column, and define the fiber stress as 
 %%% the minimum of the viscous stress and failure stresses.
 for i = 1:numel(Time)
-    [S_Compression, ~, S_Tension, ~, ~] =...
-        IceFailureEnvelope(Depth(:,i), Temp(:,i), Sigma_L(:,i), mu_flag,...
-            dedt_ss(:,i));
+    [S_Compression, ~, S_Tension, ~, ~] = IceFailureEnvelope(Depth(:,i), Temp(:,i),...
+        Sigma_L(:,i), mu_flag, dedt_ss(:,i));
     S_C(:,i) = S_Compression;
     S_T(:,i) = S_Tension;
     
@@ -104,6 +110,16 @@ for i = 1:numel(Time)
     i_T = ~i_C;
     Sigma_ss_Fail(i_C,i) = min([Sigma_ss_Visc(i_C,i), S_Compression(i_C)], [], 2);
     Sigma_ss_Fail(i_T,i) = max([Sigma_ss_Visc(i_T,i), S_Tension(i_T)], [], 2);
+
+% %%% Only record the rheology is the curvature is changing.
+%     if Out.Slab.Curvature(i,1) > 0
+%         r_C = dedt_ss(:,i) > 0 & Sigma_ss_Visc(:,i) < S_Compression;
+%         Rheology(i_C,i) = Rheol_Comp(i_C,:);
+%         Rheology(r_C,i) = 3;
+%         Rheology(i_T,i) = Rheol_Tens(i_T,:);
+%         r_T = dedt_ss(:,i) < 0 & Sigma_ss_Visc(:,i) > S_Tension;
+%         Rheology(r_T,i) = 3;
+%     end
 end
 
 %%% Compute the bending moment as a function of centerline distance using eq. (2) in 
@@ -156,3 +172,4 @@ Bend.F_Fail = F_Fail;
 Bend.F_Bend = F_Bend;
 Bend.S_C = S_C;
 Bend.S_T = S_T;
+% Bend.Rheology = Rheology;

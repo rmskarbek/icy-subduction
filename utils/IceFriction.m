@@ -1,10 +1,9 @@
 function [Temp_P, mu_P] = IceFriction(TempK)
-%%% This function carries out calculations to predict the temperature dependence of
-%%% friction coeficient during steady sliding of ice on ice.
 
-%%% 9.6.2024 - Temp_P is close to, but not exactly the same as TempK. So that needs 
-%%% to be addressed. Also, the Persson friction values need to be tweaked a bit to 
-%%% better fit the experimental data.
+%%% This function computes the coefficient of friction of ice as a function of
+%%% temperature using the method and equations in:
+%%% Persson 2015 - Ice friction, role of non-uniform frictional heating and 
+%%%                premelting
 
 %%% Schuslon calculation.
     % [Temp, mu_S] = SchulsonIce;
@@ -37,15 +36,10 @@ tau_m_0 = 50e6;         % [Pa]
 beta = 0.33;
 T_c = 273.15;           % [K]
 
-%%% Properties of Barre granite.
-% rho_g = 2640;
-% kappa_g = 2.72;
-% c_p_g = 904.4;
-
+%%% Properties of ice on ice sliding
 rho_g = rho;
 kappa_g = kappa;
 c_p_g = c_p;
-
 
 %%% Compute temperature at the asperity surface;
 %C = (l*v./(pi*rho*c_p*kappa)).^(1/2).*tau_m_0;

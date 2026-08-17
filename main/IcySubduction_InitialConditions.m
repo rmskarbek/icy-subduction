@@ -1,4 +1,4 @@
-function Vars_init = IcySubduction_InitialConditions(p)
+function [Vars_init, sigma_lith] = IcySubduction_InitialConditions(p)
 
 %%% Initial conditions for IcySubduction.m. This function is called by 
 %%% IcySubduction_Parameters.m, and follows the procedure detailed in Howell2019, 

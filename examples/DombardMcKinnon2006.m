@@ -7,7 +7,6 @@ D = 5;                                                      % shell thickness [k
 g = 1.31;                                                   % Europa gravity [m / s^2]
 R = 8.314;                                                  % gas constant [J / (mol K]
 rho_ice = 950;                                              % ice density [kg/m^3]
-% Tc = 273.15;                                                % water melt temp 1 atm [K]
 
 %%% Depth [km].
 Depth = linspace(0, D, 1000)';
@@ -16,28 +15,27 @@ Depth = linspace(0, D, 1000)';
 T_s = 80;                                                   % Surface temperature [K]
 dTdz = 18;                                                  % thermal gradient [K/km]
 TempK = T_s + dTdz*Depth;                                   % [K]
-% TempC = TempK - Tc;                                         % [C]
 
 %%% Lithostatic stress [MPa]
 sigma_L = 1e-3*g*rho_ice*Depth;
 
-%%% Friction failure in terms of principal stresses, assuming that sigma_3 is equal to the
-%%% lithostatic stress. This also assumes that failure surfaces are on optimally oriented
-%%% planes. I.E. planes at an angle phi = atan(mu) measured from sigma_3 in the direction.
-%%% of sigma_1. So the orientation of the failures surfaces are determined by the
-%%% friction coefficient.
-mu_0 = 0.55;                                                % eq (1a) in Dombard & McKinnon
+%%% Friction failure in terms of principal stresses, assuming that sigma_3 is equal to
+%%% the lithostatic stress. This also assumes that failure surfaces are on optimally 
+%%% oriented planes. I.E., planes at an angle phi = atan(mu) measured from sigma_3 in 
+%%% the direction of sigma_1. So the orientation of the failures surfaces are 
+%%% determined by the friction coefficient.
+mu_0 = 0.55;                                           % eq (1a) in Dombard & McKinnon
 phi = atan(mu_0);
-C = 1;                                                      % Cohesion [MPa]
+C = 1;                                                 % Cohesion [MPa]
 sigma_1 = (2*C + (cos(phi) + mu_0.*(sin(phi) + 1)).*sigma_L)...
     ./(cos(phi) + mu_0.*(sin(phi) - 1));
 Tau_F = sigma_1 - sigma_L;
 
 %%% Ice flow laws, paramters for Regimes A, B, and C are from from Dombard & McKinnon 
 %%% (2001), Table 1. These regimes represent grainsize insensitive disclocation creep 
-%%% mechanisms. See Durham & Stern (2001) for references. See text in D & M (2006) in the
-%%% paragraph after eq (1b). Symbols here are after Dombard & McKinnon (2001).
-e = 1e-15;                                              % strain rate [1/s]
+%%% mechanisms. See Durham & Stern (2001) for references. See text in D & M (2006) in 
+%%% the paragraph after eq (1b). Symbols here are after Dombard & McKinnon (2001).
+e = 1e-15;                                             % strain rate [1/s]
 
 %%% Regime A, 240 - 258 K.
 Q_A = 91e3;                                             % [J / mol]

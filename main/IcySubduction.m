@@ -252,6 +252,7 @@ function dVarsdt = PDE(time, Vars, ~)
 %%% lot, ~200 times longer to excute.
     % y_top = Buffett2006_Top(s_end, H, H_shell, R_min, distance);
     % height_slab = depth - y_top;
+    
 %%% Instead, the height of the slab material can be approximated using the local slab
 %%% dip angle. This does not slow down the code at all.
     height_slab = Depth_C./cos(theta);
@@ -361,90 +362,3 @@ function S = SparsityPattern(N)
     S = [Jac_T; Jac_phi];
 
 end %SparsityPattern
-
-
-%%%-------------------------------------------------------------------------------%%%
-%%% This is an attempt at vectorization, but it is very slow. I think something is 
-%%% going on with computing the differentiation matrix, due to the vectorized 
-%%% variable coefficients K_T.
-%%%-------------------------------------------------------------------------------%%%
-% function dVarsdt = PDE_vectorized(time, Vars, ~)
-%     T = Vars(1:N,:);
-%     phi = Vars(N+1:2*N,:);
-% 
-% %%% Get the current burial depth of the numerical grid points.
-%     switch GeoFlag
-%         case 'Buffett'
-%             s = v_plate*time;
-%             % s = 0;
-%             [z_top, ~, z_bottom] = Buffett2006(type, H, H_shell, R_min, s);
-% 
-%         case 'CircularArc'
-%             s = v_plate*time;
-%             [z_top, ~, z_bottom] = CircularArc(type, H, H_shell, R_min, DipAngle, s);
-%     end
-%     % depth = linspace(imag(z_top), imag(z_bottom), N)';
-%     depth = repmat(linspace(imag(z_top), imag(z_bottom), N)', 1, size(T,2));
-% 
-% %%% Compute ice density and bulk density for current temperature profile.
-%     rho_ice = IceDensity(T, method);
-%     % rho = rho_ice.*(1 - phi);
-%     rho = ((1 - f_salt)*rho_ice + f_salt*rho_salt).*(1 - phi);
-% 
-% %%% Lithostatic stress referenced to the top of the subducting column.
-%     s_column = cumtrapz(Depth_C, g*rho);
-% 
-% %%% Total lithostatic stress in the column.
-%     if depth(1,1) <= H
-%         s_lith = s_column + interp1(Depth_C, s_cond, depth(1,1));
-%     else
-% 
-% %%% Vertical stress due to thickness of convecting ice above the top of the column.
-%         s_conv = g*rho_ice_b.*(depth(1,1) - H);
-% 
-% %%% Total lithostatic stress.
-%         s_lith = s_column + s_cond(end) + s_conv;
-%     end
-% 
-% %%% Ice viscosity after Nimmo et al. (2003).
-%     eta = eta_b*exp((Q/R)*(1./T - 1/T_b));
-%     eta(eta > eta_max) = eta_max;
-% 
-% %%% Linear viscous relation for porosity change.
-%     dphidt = -phi.*s_lith./eta;
-%     dphidt(phi <= 0) = 0;
-% 
-% %%% Heat capacity. Johson2017 reference Kirk & Stevenson (1987)
-%     c_p = (1925/250)*T;                     % [J/(kg K)]
-% 
-% %%% Thermal conductivity. Eq. (2) in Johnson2017
-%     K_T = 651./T;                           % [W/(m K)]
-% 
-% %%% Calculate derivatives using differential operator.
-%     % DD2 = three_point_centered_varcoeff_D2(depth(1,1), depth(N,1), N, K_T, coeff);
-%     % DD2 = three_point_centered_varcoeff_D2(depth(1,1), depth(N,1), N, K_T(:,1), coeff);
-%     dTdzz = DD2*T;
-% 
-% %%% Apply the top boundary condition.
-%     Tshell_top = min(T_b, T_s*(T_b/T_s)^(depth(1)/H));
-%     % T_top = Tshell_top;
-%     T_top = (T(2,:) + Tshell_top)/2;
-%     K_T_top = 651./T_top;
-% 
-% %%% Linear interpolation of thermal conductivity.
-%     % dTdzz(1,:) = ((K_T_top + K_T(1))*Tshell_top - (K_T_top + 2*K_T(1) + K_T(2))*T(1,:)...
-%     %     + (K_T(1) + K_T(2))*T(2,:))/(2*dz^2);
-%     dTdzz(1,:) = ((K_T_top + K_T(1,:)).*Tshell_top...
-%         - (K_T_top + 2*K_T(1,:) + K_T(2,:)).*T(1,:)...
-%         + (K_T(1,:) + K_T(2,:)).*T(2,:))/(2*dz^2);
-% 
-% %%% Temperature equation.
-%     dTdt = (1./(rho_ice.*c_p)).*dTdzz;
-% 
-% %%% Constant temperature at bottom boundary.
-%     dTdt(N,:) = 0;
-% 
-% %%% Assemble all of the variables.    
-%     dVarsdt = [dTdt; dphidt];
-% 
-% end %PDE

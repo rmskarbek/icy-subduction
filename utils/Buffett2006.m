@@ -2,8 +2,8 @@ function [w_top, w_center, w_bottom, theta, K, dKds, s_end] = Buffett2006(type, 
     H_shell, R_min, varargin)
 
 %%% This function computes the slab geometry described in paragraph 10 of Buffett 
-%%% (2006). The geometry is apparantely based on observations of Earth subduction 
-%%% zones. Although no references are cited in that paragraph of Buffett (2006, they 
+%%% (2006). The geometry is apparently based on observations of Earth subduction 
+%%% zones. Although no references are cited in that paragraph of Buffett (2006) , they 
 %%% can be found in Buffett & Becker (2012).
 
 %%% Buffett assumes that the plate begins bending at s = 0, begins unbending at

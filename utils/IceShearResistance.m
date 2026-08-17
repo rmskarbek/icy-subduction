@@ -1,10 +1,9 @@
-function Shear = IceShearResistance(Out, mu_flag)
+function [Shear, mu, sigma_1] = IceShearResistance(Out, mu_flag)
 
 %%% This function calculates the shear stress that resists sliding on an existing 
 %%% fault surface with a variable dip angle. For IcySubduction.m, we assume that the 
 %%% fault surface exists where the upper surface of the subducting slab is in contact 
-%%% with the adjacent convective layer of the ice shell; this is indicated by the 
-%%% red, dashed line in the figure produced by GeometryPlot.m.
+%%% with the adjacent convective layer of the ice shell.
 
 %%% The calculation follows Mueller & Phillips (1991). Along the fault surface, 
 %%% brittle and ductile shear stresses are determined at a particular depth, and the 
@@ -24,20 +23,15 @@ function Shear = IceShearResistance(Out, mu_flag)
 %%% Also, H2019 assume a constant lithostatic stress in the slab instead of using a 
 %%% depth dependent stress.
 
-%%% 9.18.2024 - Input cohesion? Then can run a test that duplicates 
-%%%             DombardMcKinnon2006.m
-
-%%% 9.19.2024 - Shear resistance becomes negative if the dip angle is greater than 45
-%%%             degrees?
-
-%%% 3.11.2024 - sigma_1 = inf, for theta = 0?
-
 %%%-------------------------------------------------------------------------------%%%
 %%% INPUT
 %%%-------------------------------------------------------------------------------%%%
+% Out      - A structure of simulation output generated from IcySubduction.m.
+
 % mu_flag  - Determines how to handle the friction coefficient. 
 %            Set mu_flag = 'temperature' to use temperature dependent values from 
 %            Persson (2015). Set mu_flag = 'constant' to use a constant value.
+
 
 %%%-------------------------------------------------------------------------------%%%
 %%% OUTPUT. All of these variables are stored in a structure called 'Shear'.
@@ -60,15 +54,9 @@ function Shear = IceShearResistance(Out, mu_flag)
 
 
 %%%-------------------------------------------------------------------------------%%%
-%%% Constants.
-%%%-------------------------------------------------------------------------------%%%
-p = Out.p;
-% g = p.Constants.Gravity;                        % Europa gravity [m/s^2]
-% Tc = 273.15;                                    % water melt temp 1 atm [K]
-
-%%%-------------------------------------------------------------------------------%%%
 %%% Geometry.
 %%%-------------------------------------------------------------------------------%%%
+p = Out.p;
 H = p.Geometry.SlabThick;                       % thickness of conductive slab [m]
 
 %%% Arc length of the upper slab surface, will be used as the along-fault distance.
@@ -87,8 +75,7 @@ Theta = Out.Slab.Dip;                           % slab dip angle [radian]
 %%% Temperature at the upper slab surface.
 TempK = Out.Temperature(1,:)';
 
-%%% Lithostatic stress at the upper slab surface. Here we assume that 
-%%% sigma_3 = sigma_L.
+%%% Lithostatic stress at the upper slab surface. Here we assume that sigma_3 = sigma_L.
 sigma_L = 1e-6*Out.VerticalStress(1,:)';
 
 %%% Coefficient of friction.
@@ -134,20 +121,13 @@ S_Shear(i_H+1:end) = nan;
 %%% integrating the shear resistance along the fault plane. Only integrate through 
 %%% the conductive section of the ice shell.
 F_Fault = 1e6*cumtrapz(Xi, S_Shear);                              % [N / m]
-% F_Fault = 1e6*cumtrapz(Xi(1:i_H), S_Shear(1:i_H));                % [N / m]
-% F_fault = 1e6*trapz(Xi(1:i_cond), Tau_F(1:i_cond));                     % [N / m]
 
 %%% Calculate the force per unit distance in the sigma_1 (horizontal) direction by
 %%% integrating the additional horizontal stress that is needed to overcome the shear
-%%% resistance. This integreal is done along the vertical coordinate, i.e. with depth. 
+%%% resistance. This integral is done along the vertical coordinate, i.e. with depth. 
 %%% Only integrate through the conductive section of the ice shell.
 S_Frict = (2./sin(2*Theta)).*S_Shear;
 F_Horizontal = [1e6*cumtrapz(Depth(2:end), S_Frict(2:end)); nan];        % [N / m]
-% F_Horizontal = 1e6*cumtrapz(Depth(2:i_H), S_Frict(2:i_H));        % [N / m]
-
-% F_Horizontal = 1e6*cumtrapz(Depth(1:i_H), S_Shear(1:i_H));        % [N / m]
-
-% F_horizontal = 1e6*trapz(Depth, Tau_F);
 
 %%% H2019 frictional resisting force, equation (B12) in that paper. Here we use a 
 %%% depth dependent lithostatic stress instead of a constant value like H2019 used.
@@ -165,9 +145,6 @@ F_Frict = 1e6*cumtrapz(Depth(1:i_H), sigma_Frict(1:i_H));
 %%%-------------------------------------------------------------------------------%%%
 %%% Pad the force arrays with nan so they can easily be plotted against the arc 
 %%% length, ect.
-% F_Fault = [F_Fault; nan(numel(Xi) - i_H,1)];
-% F_Horizontal = [F_Horizontal; nan(numel(Xi) - i_H,1)];
-% F_Horizontal = [F_Horizontal; nan(numel(Xi) - i_H + 1,1)];
 F_Frict = [F_Frict; nan(numel(Xi) - i_H,1)];
 
 Shear.S_Shear = S_Shear;

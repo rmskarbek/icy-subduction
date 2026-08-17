@@ -1,7 +1,23 @@
-function Buoyancy = BuoyancyForce(Out)
+function Buoyancy = BuoyancyForce(Out, varargin)
 
 %%% This function computes the density anomaly by comparing the densities in the slab
-%%% with those outside of the slab at equivalent depths.
+%%% with those outside of the slab at equivalent depths. The density anomaly is
+%%% integrated over the length of the slab to compute the buoyancy force.
+
+%%%-------------------------------------------------------------------------------%%%
+%%% INPUT
+%%%-------------------------------------------------------------------------------%%%
+% Out      - A structure of simulation output generated from IcySubduction.m.
+
+% varargin - An optional input. Input as a constant to increase the ice grain 
+%            density. This allows for an estimate of the effects of salty ice 
+%            using simulations that did not include salt.
+
+
+%%%-------------------------------------------------------------------------------%%%
+%%% OUTPUT. All of these variables are stored in a structure called 'Buoyancy'.
+%%%-------------------------------------------------------------------------------%%%
+
 
 %%%-------------------------------------------------------------------------------%%%
 %%% Geometry.
@@ -13,11 +29,16 @@ H = p.Geometry.SlabThick;               % thickness of conductive slab [m]
 %%%-------------------------------------------------------------------------------%%%
 %%% Simulation Output.
 %%%-------------------------------------------------------------------------------%%%
-Time = Out.TimeYrs;
 ArcLength = Out.Slab.ArcLength;
 Theta = Out.Slab.Dip;
 Depth = Out.Slab.Depth;
 Rho = Out.Density;
+Phi = Out.Porosity;
+
+%%% Ice grain density increase.
+if ~isempty(varargin)
+    Rho = Rho + varargin{1}*(1 - Phi);
+end
 
 %%%-------------------------------------------------------------------------------%%%
 %%% Densities outside of the slab at equivalent depths.
@@ -57,7 +78,7 @@ Rho_Anom = mean(Rho - Rho_Shell)';
 %%% Buoyancy Force.
 %%%-------------------------------------------------------------------------------%%%
 %%% Incorrect equation (B1) from Howell2019, does not account for slab dip.
-% F_Buoy = zeros(size(Time));
+% F_Buoy = zeros(size(ArcLength));
 % F_Buoy(2:end) = g*Rho_Anom(2:end).*H.*diff(ArcLength);
 % F_Buoy = cumsum(F_Buoy);                % [N / m]
 

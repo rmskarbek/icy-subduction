@@ -6,6 +6,7 @@ function rho_ice = IceDensity(TempK, method)
 
 %%%-------------------------------------------------------------------------------%%%
 %%% Notes.
+%%%-------------------------------------------------------------------------------%%%
 %%% 1. Both Johnson2017 and Howell2019 use a temperature-dependent coefficient of 
 %%%    volumetric thermal expansion to calculate the density of solid ice. They use 
 %%%    an equation referenced to Kirk & Stevenson (1987), who in turn cite 
@@ -17,9 +18,29 @@ function rho_ice = IceDensity(TempK, method)
 %%% 3. The thermal expansion method results in a maximum ice density at ~150 K that 
 %%%    does not agree with the density data presented in Figure 4 of Fukusako. This 
 %%%    density behavior is embedded in the codes used by Johnson2017 and Howell2019.
-%%%-------------------------------------------------------------------------------%%%
-%%%-------------------------------------------------------------------------------%%%
 
+
+%%%-------------------------------------------------------------------------------%%%
+%%% INPUT
+%%%-------------------------------------------------------------------------------%%%
+% TempK  - A vector of temperature values (in Kelvin) for each value of depth.
+
+% method - A string that determines how to compute the density.
+%          method = 'constant' - uses a constant density.
+
+%          method = 'density'  - uses equation for the ice density as a function of
+%          temperature from Fukusako (1990).
+
+%          method = 'thermal' - uses a coefficient of thermal expansion to compute the
+%          density as a function of temperature.
+
+%%%-------------------------------------------------------------------------------%%%
+%%% OUTPUT
+%%%-------------------------------------------------------------------------------%%%
+% rho_ice - A vector of ice density values corresponding to the input temperature
+%           values.
+
+%%%-------------------------------------------------------------------------------%%%
 Tc = 273.15;                                                % water melt temp 1 atm [K]
 
 switch method

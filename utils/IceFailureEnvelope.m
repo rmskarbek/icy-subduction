@@ -1,39 +1,42 @@
 function [S_Compression, Tau_Compression, S_Tension, Tau_Tension, Sigma_Diff]...
     = IceFailureEnvelope(Depth, TempK, sigma_L, mu_flag, varargin)
 
-%%% This function computes a failure envelope by assuming:
-%%% 1. frictional failure takes place on optimally oriented planes.
-%%% 2. Strain rates for ductile failure stress are determined kinematically from the
-%%%    slab centerline curvature, following Buffett (2006).
-
-%%% 9.6.2024 - TempK_P is close to, but not exactly the same as TempK. So that needs 
-%%% to be addressed. Also, the Persson friction values need to be tweaked a bit to 
-%%% better fit the experimental data.
-
-%%% 10.29.2024 - Need to differentiate between tension and compression.
-
-%%% 10.29.2024 - Need to account for thin plate (plane strain?) stress state 
-%%%              assumption: sigma_zz vanishes.
+%%% This function computes a failure envelope as a function of temperature and
+%%% pressure by evaluated models for both brittle and ductile failure. The failure
+%%% envelope stress is defined by whichever mechanism yields a smaller failure stress.
+%%% This function is called by BendingForce.m
 
 %%%-------------------------------------------------------------------------------%%%
 %%% INPUT
 %%%-------------------------------------------------------------------------------%%%
-% Depth   - A vector of depth values (in meters) through the desired shell thickness.
+% Depth    - A vector of depth values (in meters) through the desired shell thickness.
 
-% TempK   - A vector of temperature values (in Kelvin) for each value of depth.
+% TempK    - A vector of temperature values (in Kelvin) for each value of depth.
 
-% mu_flag - Determines how to handle the friction coefficient. 
-%           Set mu_flag = 'temperature' to use temperature dependent values from 
-%           Persson (2015).
-%           Set mu_flag = 'constant' to use a constant value.
+% Sigma_L  - A vector of lithostatic stress values for each value of depth.
 
+% mu_flag  - A string that determines how to handle the friction coefficient. 
+%            Set mu_flag = 'temperature' to use temperature dependent values from 
+%            Persson (2015).
+%            Set mu_flag = 'constant' to use a constant value.
+
+% varargin - Use to input strain rate as a function of depth. Otherwise strain 
+%            rate is set to 1e-15 [1/s]
 
 %%%-------------------------------------------------------------------------------%%%
 %%% OUTPUT
 %%%-------------------------------------------------------------------------------%%%
-% S       - The failure envelope.
+% S_Compression   - The failure envelope for compression.
 
-% F       - The integrated force with depth.
+% S_Tension       - The failure envelope for tension.
+
+% Tau_Compression - Frictional failure stress for compression.
+
+% Tau_Tension     - Frictional failure stress for tension.
+
+% Sigma_Diff      - Ductile failure stress from ice flow laws, computed with 
+%                   IceFlowLaws.m
+
 %%%-------------------------------------------------------------------------------%%%
 
     if isempty(varargin) == false
@@ -41,19 +44,6 @@ function [S_Compression, Tau_Compression, S_Tension, Tau_Tension, Sigma_Diff]...
     else
         dedt = 1e-15;
     end
-
-%%% Ice density [kg/m^3] as a function of temperature. From Fukusako (1990),
-%%% Thermophysical Properties of Ice, Snow, and Sea Ice. There may be a more up to date
-%%% reference for ice density. However, the temperature dependence does not have much
-%%% affect relative to using a constant density.
-    % i_rho = TempC < -140;
-    % rho = 917*(1 - 1.17e-4*TempC);                              % eq. (4) in Fukusako
-    % rho(i_rho) = 930*(1 - 1.54e-5*TempC(i_rho));                % eq. (5) in Fukusako
-    % rho = rho_ice*ones(numel(Depth),1);
-
-%%% Lithostatic stress. Here we assume that sigma_3 = sigma_L.
-    % sigma_L = 1e-6*g*cumtrapz(Depth, rho);                      % [MPa]
-    % sigma_L = 1e-6*g*(cumtrapz(Depth, rho) + mean(rho)*Depth(1));                      % [MPa]
 
 %%% Coefficient of friction.
     switch mu_flag
@@ -68,7 +58,6 @@ function [S_Compression, Tau_Compression, S_Tension, Tau_Tension, Sigma_Diff]...
 
 %%% Cohesion [MPa].
     C = 0;
-    % C = 1;
 
 %%% For a failure envelope, the angle of the frictional failure planes is determined 
 %%% from the friction coefficient.
@@ -81,11 +70,9 @@ function [S_Compression, Tau_Compression, S_Tension, Tau_Tension, Sigma_Diff]...
     sigma_3 = sigma_L;
 
 %%% Compute sigma_1 for compression in the brittle regime using the friction law. 
-%%% Brice & Kohlstedt equation.
+%%% Brace & Kohlstedt equation.
     sigma_1 = (2*C + (cos(phi) + mu.*(sin(phi) + 1)).*sigma_3)./...
         (cos(phi) + mu.*(sin(phi) - 1));
-    % sigma_1 = (2*C + (sin(2*phi) + mu.*(cos(2*phi) + 1)).*sigma_L)...
-    %     ./(sin(2*phi) + mu.*(cos(2*phi) - 1));
 
 %%% Differential stress at failure for compression.
     Tau_Compression = sigma_1 - sigma_3;
@@ -96,7 +83,9 @@ function [S_Compression, Tau_Compression, S_Tension, Tau_Tension, Sigma_Diff]...
     Sigma_Diff(imag(Sigma_Diff) ~= 0) = nan;
     
 %%% Find the failure envelope for compression.
+    % Rheol_Compression = ones(size(TempK));
     S_Compression = [Tau_Compression, Sigma_Diff];
+    % Rheol_Compression(Sigma_Diff < Tau_Compression) = 2;
     S_Compression = min(S_Compression,[],2);
 
 %%%-------------------------------------------------------------------------------%%%
@@ -113,7 +102,9 @@ function [S_Compression, Tau_Compression, S_Tension, Tau_Tension, Sigma_Diff]...
     Tau_Tension = sigma_1 - sigma_3;
 
 %%% Find the failure envelope for tension.
+    % Rheol_Tension = ones(size(TempK));
     S_Tension = [Tau_Tension, Sigma_Diff];
+    % Rheol_Tension(Sigma_Diff < Tau_Tension) = 2;
     S_Tension = -min(S_Tension,[],2);
        
 %%% Convert to Pa.

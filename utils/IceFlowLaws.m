@@ -1,18 +1,22 @@
 function Sigma_Diff = IceFlowLaws(TempK, varargin)
 
-
-%%% 9.30.2024 - Add grain size as an input? Currently it is set on Line 39.
-
-%%% 10.22.2024 - ductile mechanisms act in parallel.
+%%% This function evaluates the ductile differential stress using flow laws for ice.
+%%% This function is called by: IceFailureEnvelope.m
 
 %%%-------------------------------------------------------------------------------%%%
 %%% INPUT
 %%%-------------------------------------------------------------------------------%%%
+% TempK    - A vector of temperature values (in Kelvin) for each value of depth.
+
 % varargin - Use to input strain rate as a function of temperature. Otherwise strain 
 %            rate is set to 1e-15 [1/s]
 
 %%%-------------------------------------------------------------------------------%%%
 %%% OUTPUT
+%%%-------------------------------------------------------------------------------%%%
+% Sigma_Diff - A vector of differential stress values corresponding to the input
+%              temperature values.
+
 %%%-------------------------------------------------------------------------------%%%
     R = 8.314;                                         % gas constant [J / (mol K)]
 
@@ -20,7 +24,6 @@ function Sigma_Diff = IceFlowLaws(TempK, varargin)
     if isempty(varargin)
         StrainRate = 1e-15;                            % strain rate [1/s]
     else
-        % e = varargin{1};                                    % strain rate [1/s]
         StrainRate = abs(varargin{1});                 % strain rate [1/s]
     end
     
@@ -44,7 +47,7 @@ function Sigma_Diff = IceFlowLaws(TempK, varargin)
     sigma_disl_lowT = ((StrainRate/A_disl_lowT)...
         .*exp(Q_disl_lowT./(R*TempK))).^(1/n_disl);
 
-%%% Composit differential stress for dislocation creep. First compute the high 
+%%% Composite differential stress for dislocation creep. First compute the high 
 %%% temperature stress, then replace appropriate elements with the low temperature 
 %%% stress.
     sigma_disl = ((StrainRate/A_disl_highT)...
@@ -72,7 +75,7 @@ function Sigma_Diff = IceFlowLaws(TempK, varargin)
     sigma_gbs_lowT = ((StrainRate*d^m_gbs/A_gbs_lowT)...
         .*exp(Q_gbs_lowT./(R*TempK))).^(1/n_gbs);
 
-%%% Composit differential stress for grain boundary sliding. First compute the high 
+%%% Composite differential stress for grain boundary sliding. First compute the high 
 %%% temperature stress, then replace appropriate elements with the low temperature 
 %%% stress.
     sigma_gbs = ((StrainRate*d^m_gbs/A_gbs_highT)...
@@ -106,48 +109,6 @@ function Sigma_Diff = IceFlowLaws(TempK, varargin)
 %%%-------------------------------------------------------------------------------%%%
 %%%-------------------------------------------------------------------------------%%%
 %%% Combine the mechanisms.
-    % Sigma_Diff = [sigma_disl, sigma_gbs, sigma_bs];
     Sigma_Diff = sigma_disl + sigma_gbs + sigma_bs;
 
-
-%%%-------------------------------------------------------------------------------%%%
-%%% Old code.
-%%%-------------------------------------------------------------------------------%%%
-%%% Ice flow laws, paramters for Regimes A, B, and C are from from Dombard & McKinnon 
-%%% (2001), Table 1. These regimes represent grainsize insensitive disclocation creep 
-%%% mechanisms. See Durham & Stern (2001) for references. See text in D & M (2006) in
-%%% the paragraph after eq (1b). Symbols here are after Dombard & McKinnon (2001).
-
-%%% Regime A, 240 - 258 K.
-    % Q_A = 91e3;                                             % [J / mol]
-    % n_A = 4;                                                % stress exponent
-    % A_A = 10^11.8;                                          % [1 / (s MPa^n)]
-    % A_A = A_A*(3^(1/2)/2)^(n_A + 1);
-    % Tau_A = ((e/A_A)*exp(Q_A./(R*TempK))).^(1/n_A);         % [MPa]
-    
-%%% Regime B.
-    % Q_B = 61e3;                                             % [J / mol]
-    % n_B = 4;                                                % stress exponent
-    % A_B = 10^5.1;                                           % [1 / (s MPa^n)]
-    % A_B = A_B*(3^(1/2)/2)^(n_B + 1);
-    % Tau_B = ((e/A_B)*exp(Q_B./(R*TempK))).^(1/n_B);         % [MPa]
-    
-%%% Regime C.   
-    % Q_C = 39e3;                                             % [J / mol]
-    % n_C = 6;                                                % stress exponent
-    % A_C = 10^(-3.8);                                        % [1 / (s MPa^n)]
-    % A_C = A_C*(3^(1/2)/2)^(n_C + 1);
-    % Tau_C = ((e/A_C)*exp(Q_C./(R*TempK))).^(1/n_C);         % [MPa]
-    
-%%% Grainsize sensitive grain boundary sliding from Goldsby & Kohlstedt (2001). Here,
-%%% using parameter values listed in Table in in Dombard & McKinnon (2001).
-    % d = 1e-3;                                               % grainsize [m]
-    % Q_G = 49e3;                                             % [J / mol]
-    % m_G = 1.4;                                              % grainsize exponent
-    % n_G = 1.8;                                              % stress exponent
-    % A_G = 3.9e-3;                                           % [1 / (s m^m MPa^n)]
-    % A_G = A_G*(3^(1/2)/2)^(n_G + 1);
-    % Tau_G = ((e*d^m_G/A_G)*exp(Q_G./(R*TempK))).^(1/n_G);         % [MPa]
-
-    % Sigma_Diff = [Tau_A, Tau_B, Tau_C, Tau_G];
 end

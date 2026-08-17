@@ -5,6 +5,19 @@ function [x_Slab, y_Slab] = SlabGrid(Out)
 %%% used for making contour plots of simulation output that show the curved slab 
 %%% geometry, instead of a rectangular geometry.
 
+%%%-------------------------------------------------------------------------------%%%
+%%% Input.
+%%%-------------------------------------------------------------------------------%%%
+% Out      - A structure of simulation output generated from IcySubduction.m.
+
+%%%-------------------------------------------------------------------------------%%%
+%%% OUTPUT.
+%%%-------------------------------------------------------------------------------%%%
+% x_Slab - An array of x-coordinate values for each location in the slab.
+
+% y_Slab - An array of y-coordinate values for each location in the slab.
+%%%-------------------------------------------------------------------------------%%%
+
 %%% Get the number of grid points used for the simulation. This corresponds to the
 %%% number of grid points along the z-axis.
 nz_Points = Out.p.Numerical.GridPoints;
@@ -25,9 +38,6 @@ y_Slab = nan(nz_Points, ns_Points);
 
 %%% Loop through the number of s-axis points to populate the slab coordinate arrays.
 for i = 1:ns_Points
-    % x_Slab(:, i) = linspace(x_SlabBottom(i,1), x_SlabTop(i,1), nz_Points)';
-    % y_Slab(:, i) = linspace(y_SlabBottom(i,1), y_SlabTop(i,1), nz_Points)';
-
     x_Slab(:, i) = linspace(x_SlabTop(i,1), x_SlabBottom(i,1), nz_Points)';
     y_Slab(:, i) = linspace(y_SlabTop(i,1), y_SlabBottom(i,1), nz_Points)';
 end

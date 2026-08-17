@@ -1,4 +1,5 @@
-function [ArcLengthSubsumed, i_Subsumed] = SlabSubsumption(Out)
+function [Out, ArcLengthSubsumed, DepthSubsumed, i_Subsumed, T_subsumed]...
+    = SlabSubsumption(Out)
 
 %%% This function finds locations in the slab where the temperature is equal to the
 %%% temperature in the convecting ice. This serves as a proxy for material that has
@@ -6,8 +7,31 @@ function [ArcLengthSubsumed, i_Subsumed] = SlabSubsumption(Out)
 %%% temperature of the entire column is greater than or equal to the convecting ice
 %%% temperature.
 
+%%%-------------------------------------------------------------------------------%%%
+%%% INPUT.
+%%%-------------------------------------------------------------------------------%%%
+% Out      - A structure of simulation output generated from IcySubduction.m.
+
+
+%%%-------------------------------------------------------------------------------%%%
+%%% OUTPUT.
+%%%-------------------------------------------------------------------------------%%%
+% Out               - The arc length and depth of subsumption are added to Out.Slab.
+
+% ArcLengthSubsumed - The arc length along the center line of the slab where
+%                     subsumption occurs.
+
+% DepthSubsumed     - The depth at the bottom of the column when subsumption occurs,
+%                     minus the slab thickness.
+
+% i_subsumed        - The array column index corresponding to ArcLengthSubsumed.
+
+% T_subsumed        - The temperature used to determine where subsumption occurs.
+%%%-------------------------------------------------------------------------------%%%
+
 %%% Get the temperature simulation data and define the subsumption temperature.
-T_subsumed = Out.p.Temperature.BasalTemp - 0.01;
+T_subsumed = Out.p.Temperature.BasalTemp - 0.1;
+% T_subsumed = Out.p.Temperature.BasalTemp - 1;
 
 Temp_min = min(Out.Temperature,[],1)';
 i_Subsumed = find(Temp_min > T_subsumed, 1);
@@ -16,31 +40,12 @@ i_Subsumed = find(Temp_min > T_subsumed, 1);
 %%% full slab length.
 if isempty(i_Subsumed)
     i_Subsumed = numel(Out.Slab.ArcLength);
+    ArcLengthSubsumed = nan;
+    DepthSubsumed = nan;
+else
+    ArcLengthSubsumed = Out.Slab.ArcLength(i_Subsumed);
+    DepthSubsumed = Out.Slab.Depth(end, i_Subsumed) - Out.p.Geometry.SlabThick;
 end
-ArcLengthSubsumed = Out.Slab.ArcLength(i_Subsumed);
 
-
-%%%-------------------------------------------------------------------------------%%%
-%%% This block of code finds the arc length where the slab begins to subsume, rather
-%%% than where it is fully subsumed.
-
-% %%% Find locations where the slab temperature is equal to or greater than the
-% %%% subsumption temperature, and replace those temperature values with nan.
-% Temp = Out.Temperature;
-% i_subsumed = Temp >= T_subsumed;
-% Temp(i_subsumed) = nan;
-% 
-% %%% Check if the slab was fully subsumed, and if so determine the arc length where
-% %%% that occurs. First remove the bottom row of temperature values, because that is 
-% %%% where the basal boundary condition is set.
-% Temp = Temp(1:end-1,:);
-% ArcLengthSubsumed = nan;
-% 
-% i_Subsumed = 1;
-% while sum(isnan(Temp(:,i_Subsumed))) == 0
-%     i_Subsumed = i_Subsumed + 1;
-% end
-% 
-% if i_Subsumed < size(Temp,2)
-%     ArcLengthSubsumed = Out.Slab.ArcLength(i_Subsumed);
-% end
+Out.Slab.ArcLengthSubsumed = ArcLengthSubsumed;
+Out.Slab.DepthSubsumed = DepthSubsumed;
