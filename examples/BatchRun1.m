@@ -1,8 +1,13 @@
-function [R_min_factor, v_plate, SimData, Forces] = BatchRun1(R_min_factor, v_plate)
+function [R_min_factor, v_plate, SimData, Forces, Depth_subsumed]...
+    = BatchRun1(R_min_factor, v_plate)
 
 %%% This function runs a batch of simulations for different shell and slab
 %%% thicknesses. Each simulation in the batch has the same plate rate, minimum plate
-%%% curvature scaling factor (using the Buffett 2006 geometry) and salt structure.
+%%% curvature scaling factor (using the Buffett 2006 geometry) and salt structure. 
+
+%%% For each simulation, this function also computes the buoyancy, bending, and shear 
+%%% resistance forces; the subsumption depth; and the extra density needed to drive
+%%% subduction, for determining salt content.
 
 %%%-------------------------------------------------------------------------------%%%
 %%% INPUT
@@ -20,7 +25,7 @@ v_plate_mps = v_plate/spy;                                  % [m/s]
 %%% Range of shell thicknesses.
 H_shell = 1e3*(10:5:70)';                                   % [m]
 
-%%% Range of slab thicknesses for largest slab thickness.
+%%% Range of slab thicknesses for largest shell thickness.
 H_70 = (500:500:H_shell(end)/2)';                           % [m]
 
 %%% Create a table where each entry will contain a structure that contains the 
@@ -72,6 +77,8 @@ Forces.NonSubsumedLength.F_Bend = nan(Q, M);
 Forces.NonSubsumedLength.F_Shear = nan(Q, M);
 Forces.NonSubsumedLength.F_Buoy = nan(Q, M);
 
+%%% Allocate an array to store the subsumption depths.
+Depth_subsumed = nan(Q,M);
 
 %%%-------------------------------------------------------------------------------%%%
 %%% Loop through the values of H_shell and H. For each pair of values, the parameters 
@@ -111,9 +118,10 @@ for i = 1:M
 %%% Run the simulation.
         Out = IcySubduction(p);
 
-%%% Find the arc length location where the slab is completely subsumed.
-        [ArcLengthSubsumed, k_subsumed] = SlabSubsumption(Out);
+%%% Find the depth and arc length location where the slab is completely subsumed.
+        [Out, ~, DepthSubsumed, k_subsumed] = SlabSubsumption(Out);
         k = numel(Out.Slab.ArcLength);
+        Depth_subsumed(j,i) = DepthSubsumed;
 
 %%% Calculate the forces associated with plate bending.
         Bend = BendingForce(Out);
@@ -124,9 +132,14 @@ for i = 1:M
         i_f = isfinite(Shear.F_Horizontal);
         S_f = Shear.F_Horizontal(i_f);
    
-%%% Calculate the bouyancy force.
+%%% Calculate the buoyancy force.
         Buoyancy = BuoyancyForce(Out);
-    
+
+%%% This function take simulation output and determines how much denser the ice
+%%% would need to be, in order to offset the resisting forces F_shear and F_bend.
+        [Buoyancy, delta_rho_ice, F_Buoy_salty]...
+            = BuoyancySalt(Out, Bend, Buoyancy, Shear);
+
 %%%-------------------------------------------------------------------------------%%%
 %%% Store the results.
         Sim = struct;
@@ -139,11 +152,13 @@ for i = 1:M
         Forces.FullLength.F_Buoy(j,i) = Buoyancy.F_Bouy(k);
         Forces.NonSubsumedLength.F_Bend(j,i) = Bend.F_Fail(k_subsumed);
         Forces.NonSubsumedLength.F_Buoy(j,i) = Buoyancy.F_Bouy(k_subsumed);
+        Forces.NonSubsumedLength.Delta_Rho(j,i) = delta_rho_ice;
+        Forces.NonSubsumedLength.F_Buoy_Salty(j,i) = F_Buoy_salty;
 
 %%% The force due to shear resistance is the same for the full length and
 %%% non-subsumed length, because the shear resistance only exists along the plate
 %%% interface, and the slab cannot be subsumed until it is beneath the conductive
-%%% later.
+%%% layer.
         Forces.FullLength.F_Shear(j,i) = S_f(end);
         Forces.NonSubsumedLength.F_Shear(j,i) = S_f(end);
     end
