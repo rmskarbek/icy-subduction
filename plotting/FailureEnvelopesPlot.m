@@ -88,8 +88,7 @@ legend('Viscous Stress', 'Brittle Failure', 'Ductile Failure', 'Composite Rheolo
 %%% Plot the failure envelope stresses where the plate is completely subsumed, or at 
 %%% the maximum arc length of the slab.
 %%%-------------------------------------------------------------------------------%%%
-[ArcLengthSubsumed, k] = SlabSubsumption(Out);
-
+[~, ~, ~, k, ~] = SlabSubsumption(Out);
 nexttile
 i_C = dedt_ss(:,k) > 0;
 i_T = ~i_C;

@@ -27,7 +27,7 @@ R = 8.314;                          % gas constant [J/(mol K)]
 %%%-------------------------------------------------------------------------------%%%
 %%% Geometry
 %%%-------------------------------------------------------------------------------%%%
-H = 7.5e3;                            % thickness of conductive slab [m]
+H = 5e3;                            % thickness of conductive slab [m]
 H_shell = 25e3;                     % total thickness of ice shell [m]
 GeoFlag = 'Buffett';                % a flag that determines the slab geometry.
 % GeoFlag = 'Johnson';                % a flag that determines the slab geometry.

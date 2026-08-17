@@ -34,7 +34,7 @@ cmap_T = crameri('lajolla');
 
 %%% Plot the convective layer.
 x1 = 0;
-x2 = ceil(max(max(x_Slab)));
+x2 = max(max(x_Slab));
 
 area([x1 x2], H_shell*[1 1], FaceColor = cmap_T(end,:));
 hold on
